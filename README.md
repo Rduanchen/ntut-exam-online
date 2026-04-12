@@ -6,6 +6,16 @@
 
 採用 **pnpm workspaces + Turborepo** 管理的 monorepo：
 
+**Note**: 本專案必須要裝 pnpm 10 以上才能正常運行，請確保你的環境符合要求。
+
+```bash
+npm install --global corepack@latest
+corepack enable
+corepack use pnpm@latest-10
+# or you can download it with npm
+npm install -g pnpm@latest-10
+```
+
 ```
 apps/
   backend/    — Express API 伺服器（學生 & 管理端分離）
