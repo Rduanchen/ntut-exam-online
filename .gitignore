@@ -1,0 +1,56 @@
+# --- 依賴管理 (Dependencies) ---
+node_modules/
+.pnpm-debug.log*
+
+# --- 編譯產物 (Build Artifacts) ---
+dist/
+build/
+*.tsbuildinfo
+.next/
+.vite/
+out/
+
+# --- 環境變數 (Secrets/Environment) ---
+# 絕對不要將包含密碼或 API Key 的 .env 檔案推上 Git
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# --- Turborepo 快取 (Monorepo specific) ---
+.turbo/
+
+# --- 測試與覆蓋率 (Testing) ---
+coverage/
+.nyc_output/
+
+# --- 作業系統產生的暫存檔 (OS generated) ---
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# --- 編輯器設定 (IDE/Editor) ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- 日誌檔案 (Logs) ---
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+/apps/backend/target/
+/apps/backend/to-judge/
+/apps/backend/upload/
+

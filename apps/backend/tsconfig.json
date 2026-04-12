@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",          // 這是支援現代 Node ESM 的關鍵
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+    },
+    "include": ["src/**/*"]
+}
