@@ -1,37 +1,21 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import tailwindcss from '@tailwindcss/vite'
-
-const isCompat = process.env.BUILD_COMPAT === 'true'
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
-  ...(isCompat && {
-    css: {
-      transformer: 'lightningcss',
-      lightningcss: {
-        targets: {
-          chrome: 103 << 16,
-        },
-      },
-    },
-  }),
+  plugins: [vue()],
   build: {
-    ...(isCompat && {
-      target: 'chrome103',
-      cssMinify: 'lightningcss',
-    }),
+    target: "chrome103",
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:3003',
+      "/api": "http://localhost:3003",
     },
   },
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: "jsdom",
     restoreMocks: true,
   },
-})
+});

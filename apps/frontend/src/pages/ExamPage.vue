@@ -110,29 +110,22 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
-    <div class="w-full flex flex-col lg:flex-row gap-8">
+  <div class="exam-page">
+    <div class="exam-layout">
       <!-- Left Panel: Questions & Uploads -->
-      <div
-        class="w-full lg:w-[30%] bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col h-full"
-      >
+      <div class="panel-left">
         <!-- Header part -->
-        <div
-          class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100"
-        >
-          <h1 class="text-2xl font-bold text-gray-800">
+        <div class="panel-header">
+          <h1 class="panel-title">
             {{ t("exam.title") }}
           </h1>
-          <div class="flex items-center gap-4">
-            <span
-              class="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full"
-              data-testid="student-id-display"
-            >
+          <div class="header-actions">
+            <span class="student-badge" data-testid="student-id-display">
               User: {{ studentId }}
             </span>
             <button
               @click="handleLogout"
-              class="px-4 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              class="logout-btn"
               data-testid="logout-button"
             >
               {{ t("exam.logout") }}
@@ -140,11 +133,11 @@ function handleLogout() {
           </div>
         </div>
 
-        <!-- Settings/Questions area -->
-        <div class="flex-1 overflow-y-auto space-y-6">
+        <!-- Questions area -->
+        <div class="questions-list">
           <div
             v-if="questions.length === 0"
-            class="text-center text-gray-500 py-10"
+            class="loading-text"
           >
             Loading questions...
           </div>
@@ -152,18 +145,16 @@ function handleLogout() {
           <div
             v-for="q in questions"
             :key="q.id"
-            class="border border-gray-200 rounded-lg p-5 bg-gray-50 transition hover:shadow-sm"
+            class="question-card"
             :data-testid="`question-${q.id}`"
           >
-            <div class="flex items-center justify-between mb-4">
+            <div class="question-header">
               <div>
-                <h3 class="text-lg font-semibold text-gray-800">
+                <h3 class="question-name">
                   {{ t("exam.question") }}: {{ q.name }}
                 </h3>
-                <div class="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                  >
+                <div class="question-meta">
+                  <span class="lang-badge">
                     {{ q.language }}
                   </span>
                 </div>
@@ -178,25 +169,21 @@ function handleLogout() {
                 dragOverStates[q.id] = false;
                 onDropFile(q.id, $event, q.language);
               "
-              :class="[
-                'relative border-2 border-dashed rounded-lg p-6 text-center transition-colors',
-                dragOverStates[q.id]
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-300 hover:border-gray-400 bg-white',
-              ]"
+              class="dropzone"
+              :class="{ 'dropzone-active': dragOverStates[q.id] }"
             >
               <input
                 type="file"
                 :id="`file-input-${q.id}`"
                 :accept="languageAcceptMap[q.language]"
                 @change="onFileChange(q.id, $event, q.language)"
-                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                class="dropzone-input"
                 :data-testid="`file-input-${q.id}`"
               />
 
-              <div class="space-y-2 pointer-events-none">
+              <div class="dropzone-content">
                 <svg
-                  class="mx-auto h-12 w-12 text-gray-400"
+                  class="dropzone-icon"
                   stroke="currentColor"
                   fill="none"
                   viewBox="0 0 48 48"
@@ -209,24 +196,22 @@ function handleLogout() {
                     stroke-linejoin="round"
                   />
                 </svg>
-                <div class="text-sm text-gray-600">
-                  <span class="font-medium text-blue-600 hover:text-blue-500"
-                    >Upload a file</span
-                  >
+                <div class="dropzone-text">
+                  <span class="dropzone-link">Upload a file</span>
                   or drag and drop
                 </div>
-                <p class="text-xs text-gray-500">
+                <p class="dropzone-hint">
                   Only {{ languageAcceptMap[q.language] }} files are allowed
                 </p>
               </div>
             </div>
 
             <!-- Upload status and button -->
-            <div class="mt-4 flex items-center justify-between">
-              <div class="flex items-center gap-2 flex-1 overflow-hidden">
+            <div class="upload-row">
+              <div class="file-info">
                 <svg
                   v-if="selectedFiles[q.id]"
-                  class="w-5 h-5 text-gray-400 flex-shrink-0"
+                  class="icon-sm icon-gray"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -238,25 +223,20 @@ function handleLogout() {
                     d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
                   ></path>
                 </svg>
-                <span
-                  v-if="selectedFiles[q.id]"
-                  class="text-sm text-gray-700 truncate font-medium"
-                >
+                <span v-if="selectedFiles[q.id]" class="file-name">
                   {{ selectedFiles[q.id]?.name }}
                 </span>
-                <span v-else class="text-sm text-gray-400 italic"
-                  >No file selected</span
-                >
+                <span v-else class="no-file">No file selected</span>
               </div>
 
-              <div class="flex items-center gap-3">
+              <div class="upload-actions">
                 <span
                   v-if="uploadStatus[q.id]"
-                  class="text-sm font-medium"
+                  class="upload-status"
                   :class="
                     uploadStatus[q.id] === t('exam.uploadSuccess')
-                      ? 'text-green-600'
-                      : 'text-red-600'
+                      ? 'status-success'
+                      : 'status-error'
                   "
                   :data-testid="`upload-status-${q.id}`"
                 >
@@ -264,7 +244,7 @@ function handleLogout() {
                 </span>
                 <button
                   @click="handleUpload(q.id)"
-                  class="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  class="upload-btn"
                   :disabled="!selectedFiles[q.id]"
                   :data-testid="`upload-button-${q.id}`"
                 >
@@ -277,27 +257,27 @@ function handleLogout() {
       </div>
 
       <!-- Right Panel: Results & Actions -->
-      <div class="w-full lg:w-[70%] flex flex-col gap-6">
+      <div class="panel-right">
         <!-- Action Card -->
-        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+        <div class="action-card">
+          <h2 class="action-title">
             {{ t("exam.judge") }} {{ t("exam.result") }}
           </h2>
           <button
             @click="handleJudge"
             :disabled="isJudging"
-            class="w-full py-3 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-md flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="judge-btn"
             data-testid="judge-button"
           >
             <svg
               v-if="isJudging"
-              class="animate-spin h-5 w-5 text-white"
+              class="spinner"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
             >
               <circle
-                class="opacity-25"
+                class="spinner-track"
                 cx="12"
                 cy="12"
                 r="10"
@@ -305,14 +285,14 @@ function handleLogout() {
                 stroke-width="4"
               ></circle>
               <path
-                class="opacity-75"
+                class="spinner-head"
                 fill="currentColor"
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
             <svg
               v-else
-              class="w-5 h-5"
+              class="icon-sm"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -334,11 +314,11 @@ function handleLogout() {
           </button>
           <p
             v-if="judgeError"
-            class="text-red-500 text-sm mt-3 flex items-center gap-1 bg-red-50 p-2 rounded"
+            class="judge-error"
             data-testid="judge-error"
           >
             <svg
-              class="w-4 h-4"
+              class="icon-xs"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -355,18 +335,13 @@ function handleLogout() {
         </div>
 
         <!-- Result Card -->
-        <div
-          class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex-1 overflow-y-auto min-h-[400px]"
-        >
+        <div class="result-card">
           <div v-if="judgeResult">
             <JudgeResult :result="judgeResult" />
           </div>
-          <div
-            v-else
-            class="h-full flex flex-col items-center justify-center text-gray-400"
-          >
+          <div v-else class="result-empty">
             <svg
-              class="w-16 h-16 mb-4 text-gray-200"
+              class="result-empty-icon"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -379,7 +354,7 @@ function handleLogout() {
               ></path>
             </svg>
             <p>No results yet.</p>
-            <p class="text-sm mt-1">
+            <p class="result-empty-hint">
               Submit your solutions and click Judge to see results.
             </p>
           </div>
@@ -388,3 +363,403 @@ function handleLogout() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.exam-page {
+  min-height: 100vh;
+  background: #f9fafb;
+  padding: 24px;
+}
+
+.exam-layout {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+@media (min-width: 1024px) {
+  .exam-layout {
+    flex-direction: row;
+  }
+}
+
+/* Left Panel */
+.panel-left {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid #f3f4f6;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .panel-left { width: 30%; }
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.panel-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.student-badge {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 9999px;
+}
+
+.logout-btn {
+  padding: 6px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background: #f3f4f6;
+  border-radius: 6px;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+  background: #e5e7eb;
+}
+
+/* Questions */
+.questions-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.loading-text {
+  text-align: center;
+  color: #6b7280;
+  padding: 40px 0;
+}
+
+.question-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  background: #f9fafb;
+  transition: box-shadow 0.2s;
+}
+
+.question-card:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.question-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.question-meta {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lang-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* Dropzone */
+.dropzone {
+  position: relative;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  transition: border-color 0.2s, background-color 0.2s;
+  background: #fff;
+}
+
+.dropzone:hover {
+  border-color: #9ca3af;
+}
+
+.dropzone-active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.dropzone-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dropzone-content {
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropzone-icon {
+  width: 48px;
+  height: 48px;
+  color: #9ca3af;
+  margin: 0 auto;
+}
+
+.dropzone-text {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.dropzone-link {
+  font-weight: 500;
+  color: #2563eb;
+}
+
+.dropzone-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Upload row */
+.upload-row {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-name {
+  font-size: 0.875rem;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.no-file {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.upload-status {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-success {
+  color: #16a34a;
+}
+
+.status-error {
+  color: #dc2626;
+}
+
+.upload-btn {
+  padding: 8px 20px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s;
+}
+
+.upload-btn:hover {
+  background: #1d4ed8;
+}
+
+.upload-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Right Panel */
+.panel-right {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .panel-right { width: 70%; }
+}
+
+.action-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid #f3f4f6;
+  padding: 24px;
+}
+
+.action-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.judge-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: #16a34a;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+  font-size: 1rem;
+}
+
+.judge-btn:hover {
+  background: #15803d;
+}
+
+.judge-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.judge-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef2f2;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.result-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border: 1px solid #f3f4f6;
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 400px;
+}
+
+.result-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}
+
+.result-empty-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  color: #e5e7eb;
+}
+
+.result-empty-hint {
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+/* Icons */
+.icon-sm {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.icon-xs {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-gray {
+  color: #9ca3af;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-track {
+  opacity: 0.25;
+}
+
+.spinner-head {
+  opacity: 0.75;
+}
+</style>
