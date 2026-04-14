@@ -1,0 +1,14 @@
+{
+  "name": "ntut-exam-onlineonly",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "start:prod": "pnpm build && pnpm --filter backend start"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.6"
+  }
+}

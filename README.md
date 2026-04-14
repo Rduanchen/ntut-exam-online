@@ -58,12 +58,22 @@ pnpm --filter ta dev          # TA 後台 (5174)
 
 ## 環境變數
 
-| 變數            | 預設值                                       | 說明             |
-| --------------- | -------------------------------------------- | ---------------- |
-| `JUDGER_URL`    | `http://localhost:3002/code/judge-from-file` | 評測服務位址     |
-| `TARGET_FOLDER` | `./target`                                   | 目標檔案存放路徑 |
-| `USER_PORT`     | `3003`                                       | 學生 API 埠號    |
-| `ADMIN_PORT`    | `3004`                                       | 管理 API 埠號    |
+### Backend
+
+| 變數                | 預設值                                       | 說明                 |
+| ------------------- | -------------------------------------------- | -------------------- |
+| `JUDGER_URL`        | `http://localhost:3002/code/judge-from-file` | 評測服務位址         |
+| `TARGET_FOLDER`     | `./target`                                   | 目標檔案存放路徑     |
+| `USER_PORT`         | `3003`                                       | 學生 API 埠號        |
+| `ADMIN_PORT`        | `3004`                                       | 管理 API 埠號        |
+| `FRONTEND_DIST_DIR` | `../frontend/dist`                           | 學生前端打包輸出路徑 |
+| `TA_DIST_DIR`       | `../ta/dist`                                 | TA 後台打包輸出路徑  |
+
+### Frontend / TA（建構時期）
+
+| 變數                | 預設值 | 說明                                                              |
+| ------------------- | ------ | ----------------------------------------------------------------- |
+| `VITE_API_BASE_URL` | `/api` | 後端 API 的 base URL，打包時寫入（例如 `http://example.com/api`） |
 
 ## API 路由
 
@@ -120,6 +130,44 @@ pnpm --filter backend test:watch
 ```bash
 pnpm build
 ```
+
+## 部署
+
+部署時會先打包前端靜態檔案，再由 Express 託管：
+
+```bash
+# 一鍵部署（建構 + 啟動）
+pnpm start:prod
+```
+
+等同於：
+
+```bash
+# 1. 打包所有 app（frontend、ta 產生 dist/，backend 編譯 TypeScript）
+pnpm build
+
+# 2. 啟動 backend，同時託管前端靜態檔案
+pnpm --filter backend start
+```
+
+啟動後：
+
+- **Port 3003**：學生 API + 學生前端 SPA
+- **Port 3004**：管理 API + TA 後台 SPA
+
+### 自訂前端 API 位址
+
+若前端與後端部署在不同網域，可在**打包時**指定後端 URL：
+
+```bash
+# 學生前端指向遠端後端
+VITE_API_BASE_URL=https://api.example.com/api pnpm --filter frontend build
+
+# TA 後台指向遠端管理端
+VITE_API_BASE_URL=https://admin.example.com/api pnpm --filter ta build
+```
+
+若前後端同源部署（預設），則不需設定此變數。
 
 ## 功能說明
 

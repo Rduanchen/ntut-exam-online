@@ -18,6 +18,9 @@ export const TARGET_FOLDER = process.env.TARGET_FOLDER || path.resolve('target')
 export const USER_PORT = Number(process.env.USER_PORT) || 3003;
 export const ADMIN_PORT = Number(process.env.ADMIN_PORT) || 3004;
 
+export const FRONTEND_DIST_DIR = process.env.FRONTEND_DIST_DIR || path.resolve('..', 'frontend', 'dist');
+export const TA_DIST_DIR = process.env.TA_DIST_DIR || path.resolve('..', 'ta', 'dist');
+
 export const UPLOAD_DIR = path.resolve('upload');
 export const TO_JUDGE_DIR = path.resolve('to-judge');
 

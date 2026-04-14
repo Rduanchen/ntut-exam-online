@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { ScoreBoardFormat } from '@my-project/types';
 
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
 });
 
 export interface Question {

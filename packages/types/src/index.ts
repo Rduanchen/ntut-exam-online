@@ -1,3 +1,1 @@
-import { ScoreBoardFormat } from './judger-reply.types';
-
-export type { ScoreBoardFormat };
+export type { ScoreBoardFormat, PuzzleResultPayload, Subtasks, TestCaseRecord, SpecialRuleResultRecord } from './judger-reply.types';
