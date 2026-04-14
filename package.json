@@ -7,9 +7,10 @@
     "build": "turbo build",
     "test": "turbo test",
     "start:prod": "pnpm build && pnpm --filter backend start",
-    "start:prod:compat": "BUILD_COMPAT=true pnpm build && pnpm --filter backend start"
+    "start:prod:compat": "cross-env BUILD_COMPAT=true pnpm build && pnpm --filter backend start"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "turbo": "^2.9.6"
   }
 }
