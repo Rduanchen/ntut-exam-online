@@ -26,7 +26,7 @@ if (JUDGER_URL) {
         if (res.ok) {
             console.log(`Judger URL is reachable: ${JUDGER_URL}`);
         } else {
-            console.warn(`Judger URL responded with status ${res.status}: ${JUDGER_URL}`);
+            console.warn(`Judger URL responded with status ${res.status}: ${JUDGER_URL}, however, this means the server is reachable.`);
         }
     } catch (error) {
         console.error(`Failed to reach Judger URL: ${JUDGER_URL}`, error);
