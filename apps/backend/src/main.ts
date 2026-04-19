@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import fsp from 'node:fs/promises';
 import fs from 'node:fs';
-import { UPLOAD_DIR, TO_JUDGE_DIR, TARGET_FOLDER, USER_PORT, ADMIN_PORT } from './constant/config.js';
+import { UPLOAD_DIR, TO_JUDGE_DIR, JUDGER_URL, TARGET_FOLDER, USER_PORT, ADMIN_PORT } from './constant/config.js';
 import { userApp, adminApp } from './app.js';
 
 const target_folder = process.env.TARGET_FOLDER || TARGET_FOLDER || undefined;
@@ -16,6 +16,20 @@ async function ensureDirectories() {
     await fsp.mkdir(TO_JUDGE_DIR, { recursive: true });
     if (process.env.TARGET_FOLDER == undefined) {
         await fsp.mkdir(TARGET_FOLDER, { recursive: true });
+    }
+}
+
+if (JUDGER_URL) {
+    // check endpoint exists
+    try {
+        const res = await fetch(JUDGER_URL, { method: 'HEAD' });
+        if (res.ok) {
+            console.log(`Judger URL is reachable: ${JUDGER_URL}`);
+        } else {
+            console.warn(`Judger URL responded with status ${res.status}: ${JUDGER_URL}`);
+        }
+    } catch (error) {
+        console.error(`Failed to reach Judger URL: ${JUDGER_URL}`, error);
     }
 }
 
