@@ -11,7 +11,6 @@ export const questionConfig: QuestionConfig[] = [
     { name: 'Q1', language: 'c' },
     { name: 'Q2', language: 'c' },
     { name: 'Q3', language: 'c' },
-    { name: 'Q4', language: 'python' },
 ];
 
 export const TARGET_FOLDER = process.env.TARGET_FOLDER || path.resolve('target');

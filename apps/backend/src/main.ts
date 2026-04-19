@@ -1,12 +1,24 @@
+import 'dotenv/config';
 import fsp from 'node:fs/promises';
+import fs from 'node:fs';
 import { UPLOAD_DIR, TO_JUDGE_DIR, TARGET_FOLDER, USER_PORT, ADMIN_PORT } from './constant/config.js';
 import { userApp, adminApp } from './app.js';
+
+const target_folder = process.env.TARGET_FOLDER || TARGET_FOLDER || undefined;
+if (target_folder && fs.existsSync(target_folder)) {
+    console.log(`Using target folder: ${target_folder}`);
+} else {
+    console.error('No target folder specified. Using default: ./target');
+}
 
 async function ensureDirectories() {
     await fsp.mkdir(UPLOAD_DIR, { recursive: true });
     await fsp.mkdir(TO_JUDGE_DIR, { recursive: true });
-    await fsp.mkdir(TARGET_FOLDER, { recursive: true });
+    if (process.env.TARGET_FOLDER == undefined) {
+        await fsp.mkdir(TARGET_FOLDER, { recursive: true });
+    }
 }
+
 
 ensureDirectories().then(() => {
     userApp.listen(USER_PORT, () => {

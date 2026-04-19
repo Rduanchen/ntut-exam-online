@@ -32,6 +32,7 @@
     "@my-project/types": "workspace:*",
     "archiver": "^7.0.1",
     "axios": "^1.15.0",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "multer": "^2.1.1",
     "p-limit": "^7.3.0"
