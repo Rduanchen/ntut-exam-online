@@ -41,33 +41,31 @@ packages/
 - Node.js ≥ 20
 - pnpm ≥ 10
 
-## 快速開始
+## 快速部署
 
 ```bash
 # 安裝依賴
 pnpm install
 
-# 啟動所有開發伺服器
-pnpm dev
-
-# 或分別啟動
-pnpm --filter backend dev    # Backend (user: 3003, admin: 3004)
-pnpm --filter frontend dev   # 學生前端 (5173)
-pnpm --filter ta dev          # TA 後台 (5174)
+pnpm start:prod
 ```
+
+1. 設定 TARGET_FOLDER 環境變數（必要），指向存放上傳檔案的絕對路徑
+2. 設定 backend/src/constant/config.ts 中的 questionConfig，定義題目名稱與語言(必要設定)
+3. 確認 3003 port 或者是自訂的 user port 可以被外部存取。
 
 ## 環境變數
 
 ### Backend
 
-| 變數                | 預設值                                       | 說明                 |
-| ------------------- | -------------------------------------------- | -------------------- |
-| `JUDGER_URL`        | `http://localhost:3002/code/judge-from-file` | 評測服務位址         |
-| `TARGET_FOLDER`     | `./target`                                   | 目標檔案存放路徑     |
-| `USER_PORT`         | `3003`                                       | 學生 API 埠號        |
-| `ADMIN_PORT`        | `3004`                                       | 管理 API 埠號        |
-| `FRONTEND_DIST_DIR` | `../frontend/dist`                           | 學生前端打包輸出路徑 |
-| `TA_DIST_DIR`       | `../ta/dist`                                 | TA 後台打包輸出路徑  |
+| 變數                | 預設值                                       | 說明                       |
+| ------------------- | -------------------------------------------- | -------------------------- |
+| `TARGET_FOLDER`     | `./target`                                   | 目標檔案存放路徑(必要設定) |
+| `JUDGER_URL`        | `http://localhost:3002/code/judge-from-file` | 評測服務位址               |
+| `USER_PORT`         | `3003`                                       | 學生 API 埠號              |
+| `ADMIN_PORT`        | `3004`                                       | 管理 API 埠號              |
+| `FRONTEND_DIST_DIR` | `../frontend/dist`                           | 學生前端打包輸出路徑       |
+| `TA_DIST_DIR`       | `../ta/dist`                                 | TA 後台打包輸出路徑        |
 
 ### Frontend / TA（建構時期）
 
@@ -104,7 +102,10 @@ export const questionConfig: QuestionConfig[] = [
   { name: "Q1", language: "c" },
   { name: "Q2", language: "c" },
   { name: "Q3", language: "c" },
-  { name: "Q4", language: "python" },
+  { name: "Q4", language: "c" },
+  { name: "Q5", language: "c" },
+  { name: "Q6", language: "c" },
+  { name: "Q7", language: "c" },
 ];
 ```
 
