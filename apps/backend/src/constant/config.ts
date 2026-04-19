@@ -11,6 +11,10 @@ export const questionConfig: QuestionConfig[] = [
     { name: 'Q1', language: 'c' },
     { name: 'Q2', language: 'c' },
     { name: 'Q3', language: 'c' },
+    { name: 'Q4', language: 'c' },
+    { name: 'Q5', language: 'c' },
+    { name: 'Q6', language: 'c' },
+    { name: 'Q7', language: 'c' },
 ];
 
 export const TARGET_FOLDER = process.env.TARGET_FOLDER || path.resolve('target');
