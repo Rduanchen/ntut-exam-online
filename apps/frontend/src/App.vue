@@ -16,7 +16,7 @@ function toggleLocale() {
           <svg class="app-logo" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
           <span class="app-title">NTUT Exam System</span>
         </div>
-        
+        <p class="developer-name">developed by 阿端 and VerechoTJI </p>
         <button class="locale-btn" @click="toggleLocale">
           <svg class="locale-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
           {{ locale === 'zh-TW' ? 'EN' : '中文' }}
@@ -81,6 +81,14 @@ function toggleLocale() {
   font-size: 1.25rem;
   font-weight: 500;
   letter-spacing: 0.025em;
+}
+
+.developer-name {
+  display: flex;
+  margin-left: auto;
+  margin-right: 16px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .locale-btn {
