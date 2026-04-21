@@ -26,7 +26,7 @@ export const TA_DIST_DIR = process.env.TA_DIST_DIR || path.resolve('..', 'ta', '
 
 export const UPLOAD_DIR = path.resolve('upload');
 export const TO_JUDGE_DIR = path.resolve('to-judge');
-export const QUESTION_PDF_PATH = path.resolve('question.pdf');
+export const EXAM_ZIP_PATH = path.resolve('exam.zip');
 
 export const LANGUAGE_EXTENSION_MAP: Record<string, string> = {
     c: '.c',

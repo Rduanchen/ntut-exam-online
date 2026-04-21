@@ -6,7 +6,7 @@ import {
   UPLOAD_DIR,
   TO_JUDGE_DIR,
   LANGUAGE_EXTENSION_MAP,
-  QUESTION_PDF_PATH,
+  EXAM_ZIP_PATH,
 } from "../constant/config.js";
 import { appendLog } from "../services/logger.service.js";
 import { zipDirectory } from "../services/file-transfer.service.js";
@@ -82,10 +82,10 @@ export async function judge(req: Request, res: Response) {
 
 export async function getPdf(_req: Request, res: Response) {
   try {
-    await fsp.access(QUESTION_PDF_PATH);
+    await fsp.access(EXAM_ZIP_PATH);
   } catch {
-    res.status(404).json({ error: "question.pdf not found" });
+    res.status(404).json({ error: "exam.zip not found" });
     return;
   }
-  res.sendFile(QUESTION_PDF_PATH, { headers: { 'Content-Type': 'application/pdf' } });
+  res.sendFile(EXAM_ZIP_PATH, { headers: { 'Content-Type': 'application/zip', 'Content-Disposition': 'attachment; filename="exam.zip"' } });
 }

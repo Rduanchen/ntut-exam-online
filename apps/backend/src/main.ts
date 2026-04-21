@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import fsp from 'node:fs/promises';
 import fs from 'node:fs';
-import { UPLOAD_DIR, TO_JUDGE_DIR, JUDGER_URL, TARGET_FOLDER, USER_PORT, ADMIN_PORT, QUESTION_PDF_PATH } from './constant/config.js';
+import { UPLOAD_DIR, TO_JUDGE_DIR, JUDGER_URL, TARGET_FOLDER, USER_PORT, ADMIN_PORT, EXAM_ZIP_PATH } from './constant/config.js';
 import { userApp, adminApp } from './app.js';
 
 const target_folder = process.env.TARGET_FOLDER || TARGET_FOLDER || undefined;
@@ -35,8 +35,8 @@ if (JUDGER_URL) {
 
 
 ensureDirectories().then(() => {
-    if (!fs.existsSync(QUESTION_PDF_PATH)) {
-        console.warn(`⚠️  Warning: question.pdf not found at ${QUESTION_PDF_PATH}. The /api/pdf endpoint will return 404.`);
+    if (!fs.existsSync(EXAM_ZIP_PATH)) {
+        console.warn(`⚠️  Warning: exam.zip not found at ${EXAM_ZIP_PATH}. The /api/pdf endpoint will return 404.`);
     }
     userApp.listen(USER_PORT, () => {
         console.log(`🚀 User server is running at http://localhost:${USER_PORT}`);
