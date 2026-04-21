@@ -26,6 +26,8 @@ out/
 coverage/
 .nyc_output/
 
+
+
 # --- 作業系統產生的暫存檔 (OS generated) ---
 .DS_Store
 .DS_Store?
@@ -50,7 +52,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+
+# backend 的特定忽略
 /apps/backend/target/
 /apps/backend/to-judge/
 /apps/backend/upload/
+/apps/backend/exam.zip
 
