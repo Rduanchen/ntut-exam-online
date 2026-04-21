@@ -1,11 +1,20 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { checkPdfExists, getPdfUrl } from './services/api';
 
 const { locale } = useI18n();
 
 function toggleLocale() {
   locale.value = locale.value === 'zh-TW' ? 'en' : 'zh-TW';
 }
+
+const pdfExists = ref(false);
+const pdfUrl = getPdfUrl();
+
+onMounted(async () => {
+  pdfExists.value = await checkPdfExists();
+});
 </script>
 
 <template>
@@ -17,6 +26,10 @@ function toggleLocale() {
           <span class="app-title">NTUT Exam System</span>
         </div>
         <p class="developer-name">developed by 阿端 and VerechoTJI </p>
+        <a v-if="pdfExists" class="pdf-btn" :href="pdfUrl" target="_blank" rel="noopener noreferrer">
+          <svg class="pdf-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+          {{ locale === 'zh-TW' ? '題目' : 'Questions' }}
+        </a>
         <button class="locale-btn" @click="toggleLocale">
           <svg class="locale-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
           {{ locale === 'zh-TW' ? 'EN' : '中文' }}
@@ -107,6 +120,30 @@ function toggleLocale() {
 
 .locale-btn:hover {
   background: #1d4ed8;
+}
+
+.pdf-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 6px;
+  background: rgba(29, 78, 216, 0.5);
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  margin-right: 8px;
+}
+
+.pdf-btn:hover {
+  background: #1d4ed8;
+}
+
+.pdf-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .locale-icon {

@@ -6,6 +6,7 @@ import {
   UPLOAD_DIR,
   TO_JUDGE_DIR,
   LANGUAGE_EXTENSION_MAP,
+  QUESTION_PDF_PATH,
 } from "../constant/config.js";
 import { appendLog } from "../services/logger.service.js";
 import { zipDirectory } from "../services/file-transfer.service.js";
@@ -25,14 +26,14 @@ export async function uploadFile(req: Request, res: Response) {
   const { studentId, questionId } = req.body;
 
   if (!studentId || questionId === undefined) {
-    if (req.file) await fsp.unlink(req.file.path).catch(() => {});
+    if (req.file) await fsp.unlink(req.file.path).catch(() => { });
     res.status(400).json({ error: "studentId and questionId are required" });
     return;
   }
 
   const question = questionConfig[Number(questionId)];
   if (!question) {
-    if (req.file) await fsp.unlink(req.file.path).catch(() => {});
+    if (req.file) await fsp.unlink(req.file.path).catch(() => { });
     res.status(400).json({ error: "Invalid questionId" });
     return;
   }
@@ -77,4 +78,14 @@ export async function judge(req: Request, res: Response) {
 
   const result = await submitToJudger(zipPath);
   res.json(redactHiddenOutput(result));
+}
+
+export async function getPdf(_req: Request, res: Response) {
+  try {
+    await fsp.access(QUESTION_PDF_PATH);
+  } catch {
+    res.status(404).json({ error: "question.pdf not found" });
+    return;
+  }
+  res.sendFile(QUESTION_PDF_PATH, { headers: { 'Content-Type': 'application/pdf' } });
 }

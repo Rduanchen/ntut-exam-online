@@ -29,3 +29,16 @@ export async function judgeSubmission(studentId: string): Promise<ScoreBoardForm
     const { data } = await api.post<ScoreBoardFormat>('/judge', { studentId });
     return data;
 }
+
+export async function checkPdfExists(): Promise<boolean> {
+    try {
+        await api.head('/pdf');
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export function getPdfUrl(): string {
+    return (import.meta.env.VITE_API_BASE_URL || '/api') + '/pdf';
+}
