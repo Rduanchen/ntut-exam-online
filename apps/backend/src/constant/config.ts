@@ -7,15 +7,8 @@ export interface QuestionConfig {
 
 export const JUDGER_URL = process.env.JUDGER_URL || 'http://localhost:3002/code/judge-from-file';
 
-export const questionConfig: QuestionConfig[] = [
-    { name: 'Q1', language: 'c' },
-    { name: 'Q2', language: 'c' },
-    { name: 'Q3', language: 'c' },
-    { name: 'Q4', language: 'c' },
-    { name: 'Q5', language: 'c' },
-    { name: 'Q6', language: 'c' },
-    { name: 'Q7', language: 'c' },
-];
+export const V2_API_URL = process.env.V2_API_URL || 'http://localhost:3000';
+export const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin-secret';
 
 export const TARGET_FOLDER = process.env.TARGET_FOLDER || path.resolve('target');
 export const USER_PORT = Number(process.env.USER_PORT) || 3003;

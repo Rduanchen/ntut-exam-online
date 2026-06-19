@@ -1,7 +1,6 @@
 import 'dotenv/config';
-import fsp from 'node:fs/promises';
 import fs from 'node:fs';
-import { UPLOAD_DIR, TO_JUDGE_DIR, JUDGER_URL, TARGET_FOLDER, USER_PORT, ADMIN_PORT, EXAM_ZIP_PATH } from './constant/config.js';
+import { TARGET_FOLDER, USER_PORT, ADMIN_PORT, EXAM_ZIP_PATH } from './constant/config.js';
 import { userApp, adminApp } from './app.js';
 
 const target_folder = process.env.TARGET_FOLDER || TARGET_FOLDER || undefined;
@@ -12,27 +11,12 @@ if (target_folder && fs.existsSync(target_folder)) {
 }
 
 async function ensureDirectories() {
-    await fsp.mkdir(UPLOAD_DIR, { recursive: true });
-    await fsp.mkdir(TO_JUDGE_DIR, { recursive: true });
     if (process.env.TARGET_FOLDER == undefined) {
-        await fsp.mkdir(TARGET_FOLDER, { recursive: true });
+        // fsp not imported, but maybe we don't need to create TARGET_FOLDER if we use fs?
+        // Let's just use fs.mkdirSync
+        fs.mkdirSync(TARGET_FOLDER, { recursive: true });
     }
 }
-
-if (JUDGER_URL) {
-    // check endpoint exists
-    try {
-        const res = await fetch(JUDGER_URL, { method: 'HEAD' });
-        if (res.ok) {
-            console.log(`Judger URL is reachable: ${JUDGER_URL}`);
-        } else {
-            console.warn(`Judger URL responded with status ${res.status}: ${JUDGER_URL}, however, this means the server is reachable.`);
-        }
-    } catch (error) {
-        console.error(`Failed to reach Judger URL: ${JUDGER_URL}`, error);
-    }
-}
-
 
 ensureDirectories().then(() => {
     if (!fs.existsSync(EXAM_ZIP_PATH)) {

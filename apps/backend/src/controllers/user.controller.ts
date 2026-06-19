@@ -1,57 +1,108 @@
 import { Request, Response } from "express";
 import fsp from "node:fs/promises";
-import path from "node:path";
 import {
-  questionConfig,
-  UPLOAD_DIR,
-  TO_JUDGE_DIR,
-  LANGUAGE_EXTENSION_MAP,
+  V2_API_URL,
+  ADMIN_TOKEN,
   EXAM_ZIP_PATH,
 } from "../constant/config.js";
 import { appendLog } from "../services/logger.service.js";
-import { zipDirectory } from "../services/file-transfer.service.js";
-import { submitToJudger } from "../services/judge.service.js";
 import { redactHiddenOutput } from "../utils/redact.js";
 
-export function getQuestions(_req: Request, res: Response) {
-  const questions = questionConfig.map((q, index) => ({
-    id: index,
-    name: q.name,
-    language: q.language,
-  }));
-  res.json(questions);
+export async function getQuestions(_req: Request, res: Response) {
+  try {
+    const configRes = await fetch(`${V2_API_URL}/admin/config`, {
+      headers: { "x-admin-token": ADMIN_TOKEN }
+    });
+    if (!configRes.ok) {
+      throw new Error(`Failed to fetch config from V2: ${configRes.statusText}`);
+    }
+    const config = await configRes.json();
+    const questions = [];
+    for (const section of config.sections || []) {
+      for (const puzzle of section.puzzles || []) {
+        questions.push({
+          id: puzzle.id,
+          name: puzzle.title,
+          language: puzzle.language,
+        });
+      }
+    }
+    res.json(questions);
+  } catch (error: any) {
+    console.error("getQuestions error:", error);
+    res.status(500).json({ error: "Failed to load questions from V2 API" });
+  }
 }
 
 export async function uploadFile(req: Request, res: Response) {
   const { studentId, questionId } = req.body;
 
-  if (!studentId || questionId === undefined) {
+  if (!studentId || !questionId) {
     if (req.file) await fsp.unlink(req.file.path).catch(() => { });
     res.status(400).json({ error: "studentId and questionId are required" });
     return;
   }
 
-  const question = questionConfig[Number(questionId)];
-  if (!question) {
-    if (req.file) await fsp.unlink(req.file.path).catch(() => { });
-    res.status(400).json({ error: "Invalid questionId" });
+  if (!req.file) {
+    res.status(400).json({ error: "file is required" });
     return;
   }
 
-  const ip = (req.ip || "unknown").replace(/[.:]/g, "_");
-  const ext = LANGUAGE_EXTENSION_MAP[question.language] || ".txt";
-  const destDir = path.join(UPLOAD_DIR, `${ip}_${studentId}`);
-  await fsp.mkdir(destDir, { recursive: true });
+  try {
+    // Read the uploaded file
+    const codeContent = await fsp.readFile(req.file.path, 'utf8');
 
-  const destPath = path.join(destDir, `${questionId}${ext}`);
-  await fsp.rename(req.file!.path, destPath);
+    // Get language from config
+    const configRes = await fetch(`${V2_API_URL}/admin/config`, {
+      headers: { "x-admin-token": ADMIN_TOKEN }
+    });
+    let language = 'C'; // fallback
+    if (configRes.ok) {
+      const config = await configRes.json();
+      for (const section of config.sections || []) {
+        for (const puzzle of section.puzzles || []) {
+          if (puzzle.id === questionId) {
+            language = puzzle.language;
+            break;
+          }
+        }
+      }
+    }
 
-  await appendLog(
-    "UPLOAD",
-    `studentId=${studentId} questionId=${questionId} ip=${req.ip} file=${questionId}${ext}`,
-  );
+    const payload = {
+      questionId,
+      language,
+      codeContent
+    };
 
-  res.json({ message: "File uploaded successfully", path: destPath });
+    const uploadRes = await fetch(`${V2_API_URL}/admin/submissions/${studentId}/code`, {
+      method: "POST",
+      headers: {
+        "x-admin-token": ADMIN_TOKEN,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!uploadRes.ok) {
+      const text = await uploadRes.text();
+      throw new Error(`Upload to V2 failed: ${uploadRes.status} ${text}`);
+    }
+
+    await appendLog(
+      "UPLOAD",
+      `studentId=${studentId} questionId=${questionId} ip=${req.ip}`
+    );
+
+    res.json({ message: "File uploaded successfully" });
+  } catch (error: any) {
+    console.error("uploadFile error:", error);
+    res.status(500).json({ error: "Failed to upload file to V2 API" });
+  } finally {
+    if (req.file) {
+      await fsp.unlink(req.file.path).catch(() => { });
+    }
+  }
 }
 
 export async function judge(req: Request, res: Response) {
@@ -62,22 +113,31 @@ export async function judge(req: Request, res: Response) {
     return;
   }
 
-  const entries = await fsp.readdir(UPLOAD_DIR);
-  const studentDir = entries.find((e) => e.endsWith(`_${studentId}`));
-  if (!studentDir) {
-    res.status(404).json({ error: "No submission found for this student" });
-    return;
+  try {
+    const judgeRes = await fetch(`${V2_API_URL}/admin/judger/judge/${studentId}`, {
+      method: "POST",
+      headers: {
+        "x-admin-token": ADMIN_TOKEN,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!judgeRes.ok) {
+      throw new Error(`Judge via V2 failed: ${judgeRes.statusText}`);
+    }
+
+    const resultData = await judgeRes.json();
+    
+    await appendLog("JUDGE", `studentId=${studentId}`);
+
+    // V2 API returns { message, testId, results }
+    // We extract results and redact hidden outputs
+    res.json(redactHiddenOutput(resultData.results));
+  } catch (error: any) {
+    console.error("judge error:", error);
+    res.status(500).json({ error: "Failed to judge via V2 API" });
   }
-
-  const studentPath = path.join(UPLOAD_DIR, studentDir);
-  const zipName = `${studentDir}.zip`;
-  const zipPath = path.join(TO_JUDGE_DIR, zipName);
-
-  await zipDirectory(studentPath, zipPath);
-  await appendLog("JUDGE", `studentId=${studentId} zipPath=${zipPath}`);
-
-  const result = await submitToJudger(zipPath);
-  res.json(redactHiddenOutput(result));
 }
 
 export async function getPdf(_req: Request, res: Response) {
