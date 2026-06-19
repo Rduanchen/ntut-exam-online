@@ -24,12 +24,12 @@ const languageAcceptMap: Record<string, string> = {
 
 const studentId = ref(sessionStorage.getItem("studentId") || "");
 const questions = ref<Question[]>([]);
-const selectedFiles = ref<Record<number, File | null>>({});
-const uploadStatus = ref<Record<number, string>>({});
+const selectedFiles = ref<Record<string, File | null>>({});
+const uploadStatus = ref<Record<string, string>>({});
 const judgeResult = ref<ScoreBoardFormat | null>(null);
 const isJudging = ref(false);
 const judgeError = ref("");
-const dragOverStates = ref<Record<number, boolean>>({});
+const dragOverStates = ref<Record<string, boolean>>({});
 
 onMounted(async () => {
   if (!studentId.value) {
@@ -40,7 +40,7 @@ onMounted(async () => {
 });
 
 function processSelectedFile(
-  questionId: number,
+  questionId: string,
   file: File | null,
   language: string,
   inputElement?: HTMLInputElement,
@@ -56,30 +56,30 @@ function processSelectedFile(
   selectedFiles.value[questionId] = file;
 }
 
-function handleDragOver(questionId: number, event: DragEvent) {
+function handleDragOver(questionId: string, event: DragEvent) {
   event.preventDefault();
   dragOverStates.value[questionId] = true;
 }
 
-function handleDragLeave(questionId: number, event: DragEvent) {
+function handleDragLeave(questionId: string, event: DragEvent) {
   event.preventDefault();
   dragOverStates.value[questionId] = false;
 }
 
-function onDropFile(questionId: number, event: DragEvent, language: string) {
+function onDropFile(questionId: string, event: DragEvent, language: string) {
   event.preventDefault();
   dragOverStates.value[questionId] = false;
   const file = event.dataTransfer?.files?.[0] ?? null;
   processSelectedFile(questionId, file, language);
 }
 
-function onFileChange(questionId: number, event: Event, language: string) {
+function onFileChange(questionId: string, event: Event, language: string) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0] ?? null;
   processSelectedFile(questionId, file, language, input);
 }
 
-async function handleUpload(questionId: number) {
+async function handleUpload(questionId: string) {
   const file = selectedFiles.value[questionId];
   if (!file) return;
   try {

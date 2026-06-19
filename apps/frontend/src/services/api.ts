@@ -6,7 +6,7 @@ const api = axios.create({
 });
 
 export interface Question {
-    id: number;
+    id: string;
     name: string;
     language: string;
 }
@@ -16,10 +16,10 @@ export async function fetchQuestions(): Promise<Question[]> {
     return data;
 }
 
-export async function uploadFile(studentId: string, questionId: number, file: File): Promise<{ message: string; path: string }> {
+export async function uploadFile(studentId: string, questionId: string, file: File): Promise<{ message: string; path: string }> {
     const form = new FormData();
     form.append('studentId', studentId);
-    form.append('questionId', String(questionId));
+    form.append('questionId', questionId);
     form.append('file', file);
     const { data } = await api.post<{ message: string; path: string }>('/upload-file', form);
     return data;
