@@ -1,4 +1,9 @@
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
+
+// Resolve the backend's env file consistently from src/ and dist/, regardless of cwd.
+dotenv.config({ path: fileURLToPath(new URL('../../.env', import.meta.url)), quiet: true });
 
 export interface QuestionConfig {
     name: string;
@@ -8,7 +13,9 @@ export interface QuestionConfig {
 export const JUDGER_URL = process.env.JUDGER_URL || 'http://localhost:3002/code/judge-from-file';
 
 export const V2_API_URL = process.env.V2_API_URL || 'http://localhost:3000';
-export const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin-secret';
+// The host rejects empty/default credentials. Configure the same non-default
+// token on both services instead of silently sending an unusable placeholder.
+export const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 
 export const TARGET_FOLDER = process.env.TARGET_FOLDER || path.resolve('target');
 export const USER_PORT = Number(process.env.USER_PORT) || 3003;

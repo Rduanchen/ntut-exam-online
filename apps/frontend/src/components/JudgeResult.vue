@@ -1,12 +1,27 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import type { ScoreBoardFormat, PuzzleResultPayload, TestCaseRecord } from '@my-project/types';
 
 const props = defineProps<{
     result: ScoreBoardFormat;
+    questionOrder?: string[];
 }>();
 
 const expanded = ref<Record<string, boolean>>({});
+const orderedResults = computed(() => {
+    const entries = Object.entries(props.result).map(([problemId, payload]) => ({ problemId, payload }));
+    if (!props.questionOrder?.length) return entries;
+
+    const order = new Map(props.questionOrder.map((id, index) => [id, index]));
+    return entries.sort((left, right) => {
+        const leftIndex = order.get(left.problemId);
+        const rightIndex = order.get(right.problemId);
+        if (leftIndex === undefined && rightIndex === undefined) return 0;
+        if (leftIndex === undefined) return 1;
+        if (rightIndex === undefined) return -1;
+        return leftIndex - rightIndex;
+    });
+});
 
 function toggle(problemId: string) {
     expanded.value[problemId] = !expanded.value[problemId];
@@ -49,33 +64,33 @@ function getStats(payload: PuzzleResultPayload) {
 
 <template>
     <div class="judge-result" data-testid="judge-result">
-        <div v-for="(payload, problemId) in props.result" :key="problemId" class="problem-card">
+        <div v-for="entry in orderedResults" :key="entry.problemId" class="problem-card">
             
             <!-- Accordion Header -->
-            <button @click="toggle(String(problemId))" class="accordion-header">
+            <button @click="toggle(entry.problemId)" class="accordion-header">
                 <div class="accordion-left">
-                    <h3 class="problem-title">{{ problemId }}</h3>
+                    <h3 class="problem-title">{{ entry.problemId }}</h3>
                     
                     <div class="badge-group">
                         <span class="status-dot-wrapper">
-                            <span class="status-dot" :class="getStats(payload).isAC ? 'dot-green' : 'dot-red'"></span>
+                        <span class="status-dot" :class="getStats(entry.payload).isAC ? 'dot-green' : 'dot-red'"></span>
                         </span>
-                        <span class="status-label" :class="getStats(payload).isAC ? 'label-green' : 'label-red'">
-                            {{ getStats(payload).isAC ? 'AC' : 'FAIL' }}
+                        <span class="status-label" :class="getStats(entry.payload).isAC ? 'label-green' : 'label-red'">
+                            {{ getStats(entry.payload).isAC ? 'AC' : 'FAIL' }}
                         </span>
                         
                         <span class="info-badge">
-                            Tests: {{ getStats(payload).testPassed }} / {{ getStats(payload).testTotal }}
+                            Tests: {{ getStats(entry.payload).testPassed }} / {{ getStats(entry.payload).testTotal }}
                         </span>
-                        <span v-if="getStats(payload).specialTotal > 0" class="info-badge badge-purple">
-                            Rules: {{ getStats(payload).specialPassed }} / {{ getStats(payload).specialTotal }}
+                        <span v-if="getStats(entry.payload).specialTotal > 0" class="info-badge badge-purple">
+                            Rules: {{ getStats(entry.payload).specialPassed }} / {{ getStats(entry.payload).specialTotal }}
                         </span>
                     </div>
                 </div>
                 
                 <!-- Chevron -->
                 <div class="chevron-wrap">
-                    <svg class="chevron-icon" :class="{ 'chevron-open': expanded[problemId] }" 
+                    <svg class="chevron-icon" :class="{ 'chevron-open': expanded[entry.problemId] }"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -83,9 +98,9 @@ function getStats(payload: PuzzleResultPayload) {
             </button>
 
             <!-- Accordion Body -->
-            <div v-show="expanded[problemId]" class="accordion-body">
+            <div v-show="expanded[entry.problemId]" class="accordion-body">
                 <div class="accordion-body-inner">
-                    <div v-for="(subtask, sIdx) in payload.subtasks" :key="sIdx" class="subtask-card">
+                    <div v-for="(subtask, sIdx) in entry.payload.subtasks" :key="sIdx" class="subtask-card">
                         <h4 class="subtask-title">
                             <svg class="subtask-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                             {{ $t('exam.subtask') }} {{ sIdx + 1 }}
@@ -157,7 +172,7 @@ function getStats(payload: PuzzleResultPayload) {
                     </div>
 
                     <!-- Special Rule Results -->
-                    <div v-if="payload.specialRuleResults?.length" class="subtask-card rules-card">
+                    <div v-if="entry.payload.specialRuleResults?.length" class="subtask-card rules-card">
                         <h4 class="subtask-title rules-title">
                             <svg class="subtask-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                             {{ $t('exam.specialRules') }}
@@ -173,7 +188,7 @@ function getStats(payload: PuzzleResultPayload) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(rule, i) in payload.specialRuleResults" :key="i">
+                                    <tr v-for="(rule, i) in entry.payload.specialRuleResults" :key="i">
                                         <td class="td-rule-id">{{ rule.ruleId }}</td>
                                         <td>
                                             <span class="tc-status" :class="rule.passed ? 'tc-ac' : 'tc-fail'">

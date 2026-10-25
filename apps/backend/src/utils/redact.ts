@@ -3,6 +3,9 @@ import type { ScoreBoardFormat } from "@my-project/types";
 export function redactHiddenOutput(
   scoreboard: ScoreBoardFormat,
 ): ScoreBoardFormat {
+  if (!scoreboard || typeof scoreboard !== "object" || Array.isArray(scoreboard)) {
+    throw new Error("Invalid scoreboard returned by V2 API");
+  }
   const redacted: ScoreBoardFormat = {};
 
   for (const [problemId, payload] of Object.entries(scoreboard)) {

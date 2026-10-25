@@ -14,7 +14,14 @@ export async function getQuestions(_req: Request, res: Response) {
       headers: { "x-admin-token": ADMIN_TOKEN }
     });
     if (!configRes.ok) {
-      throw new Error(`Failed to fetch config from V2: ${configRes.statusText}`);
+      const hint = configRes.status === 404
+        ? 'Check V2_API_URL points to the host admin port, not the student port.'
+        : configRes.status === 401
+          ? 'Check ADMIN_TOKEN matches the running host backend.'
+          : 'Check the host backend is configured and available.';
+      console.error(`GET ${V2_API_URL}/admin/config returned ${configRes.status}. ${hint}`);
+      res.status(502).json({ error: `Failed to load questions from host (${configRes.status}). ${hint}` });
+      return;
     }
     const config = await configRes.json();
     const questions = [];
@@ -56,22 +63,21 @@ export async function uploadFile(req: Request, res: Response) {
     const configRes = await fetch(`${V2_API_URL}/admin/config`, {
       headers: { "x-admin-token": ADMIN_TOKEN }
     });
-    let language = 'C'; // fallback
-    if (configRes.ok) {
-      const config = await configRes.json();
-      for (const section of config.sections || []) {
-        for (const puzzle of section.puzzles || []) {
-          if (puzzle.id === questionId) {
-            language = puzzle.language;
-            break;
-          }
-        }
-      }
+    if (!configRes.ok) {
+      throw new Error(`Failed to fetch host exam config: ${configRes.status}`);
+    }
+    const config = await configRes.json();
+    const puzzle = (config.sections || [])
+      .flatMap((section: { puzzles?: Array<{ id: string; language: string }> }) => section.puzzles || [])
+      .find((entry: { id: string }) => entry.id === questionId);
+    if (!puzzle) {
+      res.status(400).json({ error: `Invalid questionId '${questionId}'` });
+      return;
     }
 
     const payload = {
       questionId,
-      language,
+      language: puzzle.language,
       codeContent
     };
 
@@ -128,15 +134,64 @@ export async function judge(req: Request, res: Response) {
     }
 
     const resultData = await judgeRes.json();
+
+    if (judgeRes.status === 202) {
+      if (typeof resultData.jobId !== "string" || !resultData.jobId) {
+        throw new Error("V2 accepted judging without a jobId");
+      }
+      await appendLog("JUDGE", `studentId=${studentId} jobId=${resultData.jobId}`);
+      res.status(202).json({ jobId: resultData.jobId });
+      return;
+    }
     
     await appendLog("JUDGE", `studentId=${studentId}`);
 
-    // V2 API returns { message, testId, results }
-    // We extract results and redact hidden outputs
+    // Compatibility with hosts that still return synchronous results.
     res.json(redactHiddenOutput(resultData.results));
   } catch (error: any) {
     console.error("judge error:", error);
     res.status(500).json({ error: "Failed to judge via V2 API" });
+  }
+}
+
+export async function getJudgeJob(req: Request, res: Response) {
+  const { studentId } = req.query;
+  if (typeof studentId !== "string" || !studentId) {
+    res.status(400).json({ error: "studentId is required" });
+    return;
+  }
+
+  try {
+    const jobRes = await fetch(`${V2_API_URL}/admin/judger/jobs/${encodeURIComponent(String(req.params.jobId))}`, {
+      headers: { "x-admin-token": ADMIN_TOKEN },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!jobRes.ok) throw new Error(`V2 job query failed: ${jobRes.status}`);
+    const job = await jobRes.json();
+    if (job.testId !== studentId) {
+      res.status(404).json({ error: "Judging job not found for student" });
+      return;
+    }
+    if (job.state === "waiting" || job.state === "running") {
+      res.status(202).json({ jobId: req.params.jobId, state: job.state });
+      return;
+    }
+    if (job.state !== "finished" || !job.outcome || job.outcome.systemFailures !== 0) {
+      throw new Error("V2 judging did not finish successfully");
+    }
+
+    const scoresRes = await fetch(`${V2_API_URL}/admin/scores`, {
+      headers: { "x-admin-token": ADMIN_TOKEN },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!scoresRes.ok) throw new Error(`V2 scores query failed: ${scoresRes.status}`);
+    const scores = await scoresRes.json();
+    const score = scores.find((entry: { testId: string }) => entry.testId === studentId);
+    if (!score) throw new Error("V2 returned no scoreboard for student");
+    res.json(redactHiddenOutput(score.puzzleResults));
+  } catch (error) {
+    console.error("getJudgeJob error:", error);
+    res.status(502).json({ error: "Failed to retrieve judging results from V2 API" });
   }
 }
 

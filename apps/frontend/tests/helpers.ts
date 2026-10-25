@@ -24,6 +24,8 @@ export function createTestI18n() {
                     noFile: 'No file selected',
                     uploadSuccess: 'Uploaded successfully',
                     uploadFail: 'Upload failed',
+                    questionsLoadFail: 'Failed to load questions',
+                    wrongFileType: 'Only {ext} files are allowed',
                     judge: 'Judge',
                     judging: 'Judging...',
                     judgeFail: 'Judge failed',

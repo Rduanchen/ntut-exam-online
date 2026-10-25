@@ -19,9 +19,24 @@ beforeEach(async () => {
     await fsp.mkdir(path.join(tmpDir, 'upload'), { recursive: true });
     await fsp.mkdir(path.join(tmpDir, 'to-judge'), { recursive: true });
     await fsp.mkdir(path.join(tmpDir, 'target'), { recursive: true });
+
+    vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const url = String(input);
+        if (url.endsWith('/admin/config')) {
+            return new Response(JSON.stringify({ sections: [{ puzzles: [{ id: '0', title: 'Q1', language: 'C' }] }] }), { status: 200 });
+        }
+        if (url.endsWith('/admin/submissions/111/code')) {
+            return new Response(JSON.stringify({ success: true }), { status: 200 });
+        }
+        if (url.endsWith('/admin/judger/judge/nonexistent')) {
+            return new Response(JSON.stringify({ jobId: 'job-1', state: 'waiting' }), { status: 202 });
+        }
+        return new Response(JSON.stringify({ error: 'unexpected host request', method: init?.method }), { status: 404 });
+    }));
 });
 
 afterEach(async () => {
+    vi.unstubAllGlobals();
     await fsp.rm(tmpDir, { recursive: true, force: true });
 });
 
@@ -52,6 +67,17 @@ describe('GET /api/health', () => {
 });
 
 describe('GET /api/questions', () => {
+    it.each([
+        [404, 'V2_API_URL'],
+        [401, 'ADMIN_TOKEN'],
+    ])('reports host status %s with a configuration hint', async (status, hint) => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: Number(status) })));
+        const res = await request(userApp).get('/api/questions');
+        expect(res.status).toBe(502);
+        expect(res.body.error).toContain(String(status));
+        expect(res.body.error).toContain(hint);
+    });
+
     it('should return question list', async () => {
         const res = await request(userApp).get('/api/questions');
         expect(res.status).toBe(200);
@@ -92,7 +118,7 @@ describe('POST /api/upload-file', () => {
         expect(res.body.error).toMatch(/Invalid questionId/);
     });
 
-    it('should upload file successfully', async () => {
+    it('should upload file successfully through the host submission API', async () => {
         const res = await request(userApp)
             .post('/api/upload-file')
             .field('studentId', '111')
@@ -100,8 +126,6 @@ describe('POST /api/upload-file', () => {
             .attach('file', Buffer.from('#include <stdio.h>'), 'test.c');
         expect(res.status).toBe(200);
         expect(res.body.message).toBe('File uploaded successfully');
-        expect(res.body.path).toContain('111');
-        expect(res.body.path).toMatch(/0\.c$/);
     });
 });
 
@@ -114,12 +138,12 @@ describe('POST /api/judge', () => {
         expect(res.body.error).toMatch(/studentId/);
     });
 
-    it('should return 404 if no submission found', async () => {
+    it('should return the host asynchronous judging job handle', async () => {
         const res = await request(userApp)
             .post('/api/judge')
             .send({ studentId: 'nonexistent' });
-        expect(res.status).toBe(404);
-        expect(res.body.error).toMatch(/No submission found/);
+        expect(res.status).toBe(202);
+        expect(res.body.jobId).toBe('job-1');
     });
 });
 

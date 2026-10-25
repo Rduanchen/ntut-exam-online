@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "test": "turbo test",
+    "test": "pnpm --filter backend test && pnpm --filter frontend test && pnpm --filter ta test",
     "start:prod": "pnpm build && pnpm --filter backend start"
   },
   "devDependencies": {

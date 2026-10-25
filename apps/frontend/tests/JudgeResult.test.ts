@@ -30,9 +30,9 @@ describe('JudgeResult', () => {
         },
     };
 
-    function mountResult(result: ScoreBoardFormat = mockResult) {
+    function mountResult(result: ScoreBoardFormat = mockResult, questionOrder?: string[]) {
         return mount(JudgeResult, {
-            props: { result },
+            props: { result, questionOrder },
             global: {
                 plugins: [createTestI18n()],
             },
@@ -43,6 +43,11 @@ describe('JudgeResult', () => {
         const wrapper = mountResult();
         expect(wrapper.text()).toContain('Q1');
         expect(wrapper.text()).toContain('Q2');
+    });
+
+    it('should display questions in the exam configuration order when results finish out of order', () => {
+        const wrapper = mountResult({ Q2: mockResult.Q2, Q1: mockResult.Q1 }, ['Q1', 'Q2']);
+        expect(wrapper.findAll('.problem-title').map(title => title.text())).toEqual(['Q1', 'Q2']);
     });
 
     it('should render visible test cases with status and time', () => {

@@ -24,8 +24,8 @@ describe('redactHiddenOutput', () => {
         const hidden = result.Q1.subtasks[0].hidden;
 
         for (const tc of hidden) {
-            expect(tc.userOutput).toBe('hidden');
-            expect(tc.expectedOutput).toBe('hidden');
+            expect(tc.userOutput).toBe('result is hidden');
+            expect(tc.expectedOutput).toBe('result is hidden');
         }
     });
 

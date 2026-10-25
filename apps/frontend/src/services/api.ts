@@ -26,8 +26,21 @@ export async function uploadFile(studentId: string, questionId: string, file: Fi
 }
 
 export async function judgeSubmission(studentId: string): Promise<ScoreBoardFormat> {
-    const { data } = await api.post<ScoreBoardFormat>('/judge', { studentId });
-    return data;
+    const response = await api.post<ScoreBoardFormat | { jobId: string }>('/judge', { studentId });
+    if (response.status !== 202) return response.data as ScoreBoardFormat;
+
+    const { jobId } = response.data as { jobId: string };
+    if (typeof jobId !== 'string' || !jobId) throw new Error('Missing judging job ID');
+    const deadline = Date.now() + 15 * 60_000;
+    while (Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const result = await api.get<ScoreBoardFormat>(`/judge/jobs/${encodeURIComponent(jobId)}`, {
+            params: { studentId },
+            timeout: 35_000,
+        });
+        if (result.status !== 202) return result.data;
+    }
+    throw new Error('Timed out waiting for judging results');
 }
 
 export async function checkPdfExists(): Promise<boolean> {

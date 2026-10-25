@@ -1,6 +1,9 @@
-import 'dotenv/config';
 import fs from 'node:fs';
-import { TARGET_FOLDER, USER_PORT, ADMIN_PORT, EXAM_ZIP_PATH } from './constant/config.js';
+import { TARGET_FOLDER, USER_PORT, ADMIN_PORT, EXAM_ZIP_PATH, ADMIN_TOKEN } from './constant/config.js';
+
+if (!ADMIN_TOKEN || ['admin', 'admin-secret'].includes(ADMIN_TOKEN)) {
+    throw new Error('Set ADMIN_TOKEN to the same non-default value as the host backend before starting online services.');
+}
 import { userApp, adminApp } from './app.js';
 
 const target_folder = process.env.TARGET_FOLDER || TARGET_FOLDER || undefined;

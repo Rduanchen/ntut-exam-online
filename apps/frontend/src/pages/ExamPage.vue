@@ -18,12 +18,18 @@ const languageAcceptMap: Record<string, string> = {
   python: ".py",
   c: ".c",
   cpp: ".cpp",
+  "c++": ".cpp",
   java: ".java",
   javascript: ".js",
 };
 
+function acceptedExtension(language: string) {
+  return languageAcceptMap[language.toLowerCase()];
+}
+
 const studentId = ref(sessionStorage.getItem("studentId") || "");
 const questions = ref<Question[]>([]);
+const questionsError = ref("");
 const selectedFiles = ref<Record<string, File | null>>({});
 const uploadStatus = ref<Record<string, string>>({});
 const judgeResult = ref<ScoreBoardFormat | null>(null);
@@ -36,7 +42,11 @@ onMounted(async () => {
     router.push({ name: "login" });
     return;
   }
-  questions.value = await fetchQuestions();
+  try {
+    questions.value = await fetchQuestions();
+  } catch {
+    questionsError.value = t("exam.questionsLoadFail");
+  }
 });
 
 function processSelectedFile(
@@ -45,7 +55,7 @@ function processSelectedFile(
   language: string,
   inputElement?: HTMLInputElement,
 ) {
-  const ext = languageAcceptMap[language];
+  const ext = acceptedExtension(language);
   if (file && ext && !file.name.endsWith(ext)) {
     uploadStatus.value[questionId] = t("exam.wrongFileType", { ext });
     if (inputElement) inputElement.value = "";
@@ -135,8 +145,11 @@ function handleLogout() {
 
         <!-- Questions area -->
         <div class="questions-list">
+          <p v-if="questionsError" role="alert" data-testid="questions-error">
+            {{ questionsError }}
+          </p>
           <div
-            v-if="questions.length === 0"
+            v-else-if="questions.length === 0"
             class="loading-text"
           >
             Loading questions...
@@ -175,7 +188,7 @@ function handleLogout() {
               <input
                 type="file"
                 :id="`file-input-${q.id}`"
-                :accept="languageAcceptMap[q.language]"
+                :accept="acceptedExtension(q.language)"
                 @change="onFileChange(q.id, $event, q.language)"
                 class="dropzone-input"
                 :data-testid="`file-input-${q.id}`"
@@ -201,7 +214,7 @@ function handleLogout() {
                   or drag and drop
                 </div>
                 <p class="dropzone-hint">
-                  Only {{ languageAcceptMap[q.language] }} files are allowed
+                  Only {{ acceptedExtension(q.language) }} files are allowed
                 </p>
               </div>
             </div>
@@ -337,7 +350,7 @@ function handleLogout() {
         <!-- Result Card -->
         <div class="result-card">
           <div v-if="judgeResult">
-            <JudgeResult :result="judgeResult" />
+            <JudgeResult :result="judgeResult" :question-order="questions.map((question) => String(question.id))" />
           </div>
           <div v-else class="result-empty">
             <svg

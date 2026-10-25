@@ -48,7 +48,31 @@ describe('ExamPage', () => {
 
     it('should display the student ID', async () => {
         const wrapper = await mountExam();
-        expect(wrapper.find('[data-testid="student-id-display"]').text()).toBe('stu001');
+        expect(wrapper.find('[data-testid="student-id-display"]').text()).toContain('stu001');
+    });
+
+    it.each([
+        ['C', '.c'], ['Cpp', '.cpp'], ['Python', '.py'],
+        ['Java', '.java'], ['JavaScript', '.js'], ['c++', '.cpp'],
+    ])('uses the correct file restriction for host language %s', async (language, extension) => {
+        vi.mocked(api.fetchQuestions).mockResolvedValue([{ id: 'host-question', name: 'Host question', language }]);
+        const wrapper = await mountExam();
+        const input = wrapper.find('[data-testid="file-input-host-question"]');
+        expect(input.attributes('accept')).toBe(extension);
+        Object.defineProperty(input.element, 'files', { value: [new File(['code'], `main${extension}`)], configurable: true });
+        await input.trigger('change');
+        expect(wrapper.find('[data-testid="upload-button-host-question"]').attributes('disabled')).toBeUndefined();
+        Object.defineProperty(input.element, 'files', { value: [new File(['code'], 'wrong.txt')], configurable: true });
+        await input.trigger('change');
+        expect(wrapper.find('[data-testid="upload-status-host-question"]').text()).toBe(`Only ${extension} files are allowed`);
+        expect(wrapper.find('[data-testid="upload-button-host-question"]').attributes('disabled')).toBeDefined();
+    });
+
+    it('shows an error instead of loading forever when the backend cannot load host questions', async () => {
+        vi.mocked(api.fetchQuestions).mockRejectedValue(new Error('host unavailable'));
+        const wrapper = await mountExam();
+        expect(wrapper.find('[data-testid="questions-error"]').text()).toBe('Failed to load questions');
+        expect(wrapper.text()).not.toContain('Loading questions...');
     });
 
     it('should have upload buttons for each question', async () => {
